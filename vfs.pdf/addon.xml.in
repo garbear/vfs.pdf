@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<addon
+  id="vfs.pdf"
+  version="22.0.0"
+  name="PDF support"
+  provider-name="sunlollyking">
+  <requires>@ADDON_DEPENDS@</requires>
+  <extension
+    point="kodi.vfs"
+    protocols="pdf"
+    extensions=".pdf"
+    files="true"
+    directories="true"
+    filedirectories="true"
+    encodedhostname="true"
+    library_@PLATFORM@="@LIBRARY_FILENAME@" />
+  <extension point="xbmc.addon.metadata">
+    <platform>@PLATFORM@</platform>
+    <license>GPL-2.0-or-later</license>
+    <source>https://github.com/sunlollyking/vfs.pdf</source>
+    <assets>
+      <icon>resources/icon.png</icon>
+    </assets>
+    <summary lang="en_GB">PDF documents as pictures</summary>
+    <description lang="en_GB">Opens a PDF as a folder holding a picture of each page, so its pages can be shown like any other pictures - a game's manual, for one. Uses the Poppler library.</description>
+  </extension>
+</addon>
