@@ -8,6 +8,7 @@
 #include "PdfPages.h"
 
 #include <algorithm>
+#include <cctype>
 #include <cstdio>
 #include <kodi/Filesystem.h>
 #include <kodi/General.h>
@@ -34,6 +35,31 @@ constexpr size_t DOCUMENTS_KEPT = 3;
 //! Kodi opens a picture more than once on its way to the screen, and a viewer
 //! turns back a page as often as forward
 constexpr size_t PAGES_KEPT = 8;
+
+/*!
+ * \brief The PDF's path, from the URL's hostname
+ *
+ * Kodi decodes an add-on's hostname only when the add-on also claims file
+ * extensions, which this one does not, so the path arrives as it was encoded.
+ */
+std::string PdfPath(const kodi::addon::VFSUrl& url)
+{
+  const std::string& host = url.GetHostname();
+  std::string path;
+  path.reserve(host.size());
+  for (size_t i = 0; i < host.size(); i++)
+  {
+    if (host[i] == '%' && i + 2 < host.size() && std::isxdigit(static_cast<unsigned char>(host[i + 1])) &&
+        std::isxdigit(static_cast<unsigned char>(host[i + 2])))
+    {
+      path.push_back(static_cast<char>(std::stoi(host.substr(i + 1, 2), nullptr, 16)));
+      i += 2;
+    }
+    else
+      path.push_back(host[i]);
+  }
+  return path;
+}
 
 std::string PageName(unsigned int page)
 {
@@ -218,7 +244,7 @@ public:
     const int page = PageIndex(url.GetFilename());
     if (page < 0)
       return nullptr;
-    auto jpeg = Cache().Picture(url.GetHostname(), static_cast<unsigned int>(page));
+    auto jpeg = Cache().Picture(PdfPath(url), static_cast<unsigned int>(page));
     if (!jpeg)
       return nullptr;
     return new OpenPage{std::move(jpeg)};
@@ -271,20 +297,45 @@ public:
     return true;
   }
 
-  int Stat(const kodi::addon::VFSUrl& url, kodi::vfs::FileStatus& buffer) override { return -1; }
+  int Stat(const kodi::addon::VFSUrl& url, kodi::vfs::FileStatus& buffer) override
+  {
+    // Kodi's picture cache needs a size and a time before it will load a page.
+    // The page's time is its document's, so editing the PDF refreshes it.
+    const std::string path = PdfPath(url);
+    kodi::vfs::FileStatus document;
+    if (!kodi::vfs::StatFile(path, document))
+      return -1;
+    buffer.SetModificationTime(document.GetModificationTime());
+    buffer.SetAccessTime(document.GetAccessTime());
+    buffer.SetStatusTime(document.GetStatusTime());
+    if (url.GetFilename().empty())
+    {
+      buffer.SetIsDirectory(true);
+      return 0;
+    }
+    const int page = PageIndex(url.GetFilename());
+    if (page < 0)
+      return -1;
+    auto jpeg = Cache().Picture(path, static_cast<unsigned int>(page));
+    if (!jpeg)
+      return -1;
+    buffer.SetIsRegular(true);
+    buffer.SetSize(jpeg->size());
+    return 0;
+  }
 
   bool Exists(const kodi::addon::VFSUrl& url) override
   {
     const int page = PageIndex(url.GetFilename());
     if (page < 0)
       return false;
-    std::shared_ptr<CPdfPages> pages = Cache().Document(url.GetHostname());
+    std::shared_ptr<CPdfPages> pages = Cache().Document(PdfPath(url));
     return pages && static_cast<unsigned int>(page) < pages->PageCount();
   }
 
   bool DirectoryExists(const kodi::addon::VFSUrl& url) override
   {
-    return url.GetFilename().empty() && Cache().Document(url.GetHostname()) != nullptr;
+    return url.GetFilename().empty() && Cache().Document(PdfPath(url)) != nullptr;
   }
 
   bool GetDirectory(const kodi::addon::VFSUrl& url,
@@ -296,7 +347,7 @@ public:
     std::string root = url.GetURL();
     if (root.empty() || root.back() != '/')
       root += '/';
-    ListPages(url.GetHostname(), root, items);
+    ListPages(PdfPath(url), root, items);
     return !items.empty();
   }
 

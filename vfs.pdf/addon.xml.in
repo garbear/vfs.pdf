@@ -12,7 +12,6 @@
     files="true"
     directories="true"
     filedirectories="false"
-    encodedhostname="true"
     library_@PLATFORM@="@LIBRARY_FILENAME@" />
   <extension point="xbmc.addon.metadata">
     <platform>@PLATFORM@</platform>
