@@ -54,6 +54,11 @@ jobs:
         CXX: ${{ matrix.CXX }}
       run: |
         make -C ${app_id}/build -j$(getconf _NPROCESSORS_ONLN)
+    - name: Check JPEG 2000 support
+      # Scanned manuals mostly keep their pages as JPEG 2000, which Poppler
+      # draws blank unless it was built with OpenJPEG
+      run: |
+        nm -C $(find ${{ github.workspace }}/xbmc/addons/${app_id} -name "${app_id}.so*" -type f) | grep -q opj_decode
 
   test:
     name: Page renderer tests

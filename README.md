@@ -20,9 +20,12 @@ staying inside the texture size most devices allow.
 ## Build
 
 Like any Kodi binary add-on, through Kodi's `cmake/addons`; `depends/common`
-builds Poppler's C++ frontend statically, with FreeType, libjpeg and (on Linux)
-fontconfig from the system. A system Poppler is used instead if one is found,
-its own dependencies coming from pkg-config.
+builds OpenJPEG and Poppler's C++ frontend statically, with FreeType, libjpeg
+and (on Linux) fontconfig from the system. A system Poppler is used instead if
+one is found, its own dependencies coming from pkg-config.
+
+Poppler must be built with OpenJPEG. Scanned manuals mostly keep their pages
+as JPEG 2000, and without it those pages are drawn blank.
 
 The page renderer's test needs Poppler and libjpeg but not Kodi:
 
