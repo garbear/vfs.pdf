@@ -1,0 +1,1 @@
+poppler https://poppler.freedesktop.org/poppler-26.01.0.tar.xz

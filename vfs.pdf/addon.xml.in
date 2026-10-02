@@ -8,10 +8,10 @@
   <extension
     point="kodi.vfs"
     protocols="pdf"
-    extensions=".pdf"
+    extensions=""
     files="true"
     directories="true"
-    filedirectories="true"
+    filedirectories="false"
     encodedhostname="true"
     library_@PLATFORM@="@LIBRARY_FILENAME@" />
   <extension point="xbmc.addon.metadata">

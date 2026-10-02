@@ -6,7 +6,12 @@ A Kodi VFS add-on that opens a PDF as a folder holding a picture of each page:
 
 so anything in Kodi that shows pictures can show a PDF's pages. It was written
 for game manuals, which [script.game.manuals](https://github.com/sunlollyking/script.game.manuals)
-shows with it, but a PDF in the Pictures section opens the same way.
+shows with it.
+
+Only the `pdf://` protocol is registered, not the `.pdf` extension. Kodi adds
+an add-on's extensions to its video, music and picture lists, so claiming
+`.pdf` would put every PDF into every media listing; an add-on that wants a
+PDF's pages builds the `pdf://` path itself.
 
 Pages are drawn by [Poppler](https://poppler.freedesktop.org) onto white, as
 JPEGs whose longer side is 2560 pixels: enough to zoom in on small print while
@@ -14,15 +19,19 @@ staying inside the texture size most devices allow.
 
 ## Build
 
-Like any Kodi binary add-on. Poppler's C++ frontend is needed; built
-statically, its own dependencies (FreeType, fontconfig, libjpeg, libpng,
-lcms2, zlib) are found through pkg-config.
+Like any Kodi binary add-on, through Kodi's `cmake/addons`; `depends/common`
+builds Poppler's C++ frontend statically, with FreeType, libjpeg and (on Linux)
+fontconfig from the system. A system Poppler is used instead if one is found,
+its own dependencies coming from pkg-config.
 
-    cmake -DKODI_INCLUDE_DIR=<kodi>/xbmc/addons/kodi-dev-kit/include/kodi \
-          -DBUILD_TESTING=ON <this folder>
-    make && ctest
+The page renderer's test needs Poppler and libjpeg but not Kodi:
 
-The test renders a PDF it builds itself and needs no Kodi.
+    cmake -S tests -B build-tests && cmake --build build-tests
+    ctest --test-dir build-tests
+
+It renders a PDF it builds itself. Linux, including LibreELEC, is what has been
+built and run; the other platforms go through the same `depends` but have not
+been tried.
 
 ## Licence
 

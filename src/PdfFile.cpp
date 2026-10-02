@@ -8,7 +8,6 @@
 #include "PdfPages.h"
 
 #include <algorithm>
-#include <cctype>
 #include <cstdio>
 #include <kodi/Filesystem.h>
 #include <kodi/General.h>
@@ -26,7 +25,6 @@
  */
 namespace
 {
-constexpr const char* PROTOCOL = "pdf://";
 //! The longer side of a page's picture. Room to zoom in on a manual's small
 //! print, and within the 4096 that is still a common texture limit.
 constexpr unsigned int PAGE_SIZE = 2560;
@@ -36,24 +34,6 @@ constexpr size_t DOCUMENTS_KEPT = 3;
 //! Kodi opens a picture more than once on its way to the screen, and a viewer
 //! turns back a page as often as forward
 constexpr size_t PAGES_KEPT = 8;
-
-std::string URLEncode(const std::string& data)
-{
-  std::string result;
-  result.reserve(data.length() * 2);
-  for (const unsigned char c : data)
-  {
-    if (std::isalnum(c) || c == '-' || c == '.' || c == '_' || c == '!' || c == '(' || c == ')')
-      result.push_back(static_cast<char>(c));
-    else
-    {
-      char escaped[4];
-      snprintf(escaped, sizeof(escaped), "%%%02x", c);
-      result += escaped;
-    }
-  }
-  return result;
-}
 
 std::string PageName(unsigned int page)
 {
@@ -320,14 +300,6 @@ public:
     return !items.empty();
   }
 
-  bool ContainsFiles(const kodi::addon::VFSUrl& url,
-                     std::vector<kodi::vfs::CDirEntry>& items,
-                     std::string& rootpath) override
-  {
-    rootpath = PROTOCOL + URLEncode(url.GetURL()) + "/";
-    ListPages(url.GetURL(), rootpath, items);
-    return !items.empty();
-  }
 };
 
 class ATTR_DLL_LOCAL CMyAddon : public kodi::addon::CAddonBase

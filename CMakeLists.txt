@@ -19,12 +19,4 @@ set(DEPLIBS ${POPPLER_LIBRARIES} ${JPEG_LIBRARIES})
 
 build_addon(vfs.pdf PDF DEPLIBS)
 
-option(BUILD_TESTING "Build the page renderer's tests" OFF)
-if(BUILD_TESTING)
-  enable_testing()
-  add_executable(test_pdfpages tests/TestPdfPages.cpp src/PdfPages.cpp)
-  target_link_libraries(test_pdfpages ${DEPLIBS})
-  add_test(NAME pdf_pages COMMAND test_pdfpages)
-endif()
-
 include(CPack)
