@@ -1,0 +1,11 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -107,6 +107,8 @@ if(WIN32)
+   set(_default_fontconfiguration "win32")
+ elseif(ANDROID)
+   set(_default_fontconfiguration "android")
++elseif(APPLE)
++  set(_default_fontconfiguration "generic")
+ else()
+   set(_default_fontconfiguration "fontconfig")
+ endif()
