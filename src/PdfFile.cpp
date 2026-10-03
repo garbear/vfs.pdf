@@ -28,7 +28,7 @@ namespace
 {
 //! The longer side of a page's picture. Room to zoom in on a manual's small
 //! print, and within the 4096 that is still a common texture limit.
-constexpr unsigned int PAGE_SIZE = 2560;
+constexpr unsigned int PAGE_IMAGE_SIZE = 2560;
 //! A manual is a handful of megabytes; anything this size is not one
 constexpr int64_t MAX_DOCUMENT_SIZE = 256 * 1024 * 1024;
 constexpr size_t DOCUMENTS_KEPT = 3;
@@ -136,7 +136,7 @@ public:
     lock.unlock();
 
     auto jpeg = std::make_shared<std::vector<uint8_t>>();
-    if (!pages->RenderJpeg(page, PAGE_SIZE, *jpeg))
+    if (!pages->RenderJpeg(page, PAGE_IMAGE_SIZE, *jpeg))
     {
       kodi::Log(ADDON_LOG_ERROR, "Page %u of \"%s\" did not render", page + 1, path.c_str());
       return {};
