@@ -1,4 +1,3 @@
 freetype
-iconv
 libjpeg-turbo
 openjpeg
