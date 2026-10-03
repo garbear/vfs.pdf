@@ -25,9 +25,21 @@ find_package_handle_standard_args(Poppler
 
 if(POPPLER_FOUND)
   set(POPPLER_INCLUDE_DIRS ${POPPLER_INCLUDE_DIR})
-  # A static Poppler needs the libraries it was built against linked in too,
-  # which only pkg-config knows
-  if(POPPLER_CPP_LIBRARY MATCHES "\\.a$" AND PC_POPPLER_STATIC_LDFLAGS)
+  # A static Poppler needs the libraries it was built against linked in too.
+  if(APPLE AND POPPLER_CPP_LIBRARY MATCHES "\\.a$")
+    find_package(Freetype REQUIRED)
+    find_package(ZLIB REQUIRED)
+    find_package(OpenJPEG REQUIRED)
+    find_package(Iconv REQUIRED)
+
+    set(POPPLER_LIBRARIES
+        ${POPPLER_CPP_LIBRARY}
+        ${POPPLER_CORE_LIBRARY}
+        Freetype::Freetype
+        ZLIB::ZLIB
+        ${OPENJPEG_LIBRARIES}
+        Iconv::Iconv)
+  elseif(POPPLER_CPP_LIBRARY MATCHES "\\.a$" AND PC_POPPLER_STATIC_LDFLAGS)
     set(POPPLER_LIBRARIES ${PC_POPPLER_STATIC_LDFLAGS})
   else()
     set(POPPLER_LIBRARIES ${POPPLER_CPP_LIBRARY} ${POPPLER_CORE_LIBRARY})
