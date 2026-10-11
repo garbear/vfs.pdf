@@ -20,7 +20,7 @@ staying inside the texture size most devices allow.
 ## Build
 
 Like any Kodi binary add-on, through Kodi's `cmake/addons`; `depends/common`
-builds OpenJPEG and Poppler's C++ frontend statically, with FreeType, libjpeg
+builds FreeType, OpenJPEG and Poppler's C++ frontend statically, with libjpeg
 and (on Linux) fontconfig from the system. A system Poppler is used instead if
 one is found, its own dependencies coming from pkg-config.
 

@@ -1,0 +1,1 @@
+freetype https://download.savannah.gnu.org/releases/freetype/freetype-2.14.3.tar.xz

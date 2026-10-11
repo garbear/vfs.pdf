@@ -1,0 +1,40 @@
+--- a/win_iconv.c
++++ b/win_iconv.c
+@@ -768,7 +768,11 @@
+     HMODULE h;
+     if (ConvertINetString != NULL)
+         return TRUE;
++#if defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_APP)
++    h = LoadPackagedLibrary(L"mlang.dll", 0);
++#else
+     h = LoadLibrary(TEXT("mlang.dll"));
++#endif
+     if (!h)
+         return FALSE;
+     ConvertINetString = (CONVERTINETSTRING)GetProcAddressA(h, "ConvertINetString");
+@@ -1226,7 +1230,25 @@
+         dllname = xstrndup(p, e - p);
+         if (dllname == NULL)
+             return FALSE;
++#if defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_APP)
++        int length = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS,
++                                        dllname, -1, NULL, 0);
++        wchar_t *wide_name = length > 0 ? malloc(length * sizeof(wchar_t)) : NULL;
++        if (wide_name == NULL) {
++            free(dllname);
++            return FALSE;
++        }
++        if (!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS,
++                                dllname, -1, wide_name, length)) {
++            free(wide_name);
++            free(dllname);
++            return FALSE;
++        }
++        hlibiconv = LoadPackagedLibrary(wide_name, 0);
++        free(wide_name);
++#else
+         hlibiconv = LoadLibraryA(dllname);
++#endif
+         free(dllname);
+         if (hlibiconv != NULL)
+         {
