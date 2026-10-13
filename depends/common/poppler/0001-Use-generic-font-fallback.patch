@@ -1,0 +1,11 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -120,7 +120,7 @@
+ elseif(ANDROID)
+   set(_default_fontconfiguration "android")
+ else()
+-  set(_default_fontconfiguration "fontconfig")
++  set(_default_fontconfiguration "generic")
+ endif()
+ set(FONT_CONFIGURATION "${_default_fontconfiguration}" CACHE STRING "The font configuration backend (win32|android|generic|fontconfig).")
+ string(TOLOWER "${FONT_CONFIGURATION}" font_configuration)

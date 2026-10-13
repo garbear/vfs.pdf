@@ -20,9 +20,11 @@ staying inside the texture size most devices allow.
 ## Build
 
 Like any Kodi binary add-on, through Kodi's `cmake/addons`; `depends/common`
-builds FreeType, OpenJPEG and Poppler's C++ frontend statically, with libjpeg
-and (on Linux) fontconfig from the system. A system Poppler is used instead if
-one is found, its own dependencies coming from pkg-config.
+builds FreeType, libjpeg-turbo, OpenJPEG and Poppler's C++ frontend statically.
+Bundled Poppler retains native font configuration on Windows and Android;
+Linux and Apple default to generic fonts without Fontconfig. This fallback is
+sufficient for game manuals. A system Poppler is used instead if one is found,
+its own dependencies coming from pkg-config.
 
 Poppler must be built with OpenJPEG. Scanned manuals mostly keep their pages
 as JPEG 2000, and without it those pages are drawn blank.
