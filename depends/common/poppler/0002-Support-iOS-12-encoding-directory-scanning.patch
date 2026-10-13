@@ -1,0 +1,111 @@
+--- a/poppler/GlobalParams.h
++++ b/poppler/GlobalParams.h
+@@ -51,7 +51,6 @@
+ #include <mutex>
+ #include <optional>
+ #include <vector>
+-#include <filesystem>
+
+ class GooString;
+ class NameToCharCode;
+@@ -169,7 +168,7 @@
+     static bool parseYesNo2(const char *token, bool *flag);
+
+ private:
+-    void parseNameToUnicode(const std::filesystem::path &name);
++    void parseNameToUnicode(const std::string &name);
+
+     void scanEncodingDirs();
+     void addCIDToUnicode(std::string &&collection, std::string &&fileName);
+--- a/poppler/GlobalParams.cc
++++ b/poppler/GlobalParams.cc
+@@ -61,7 +61,12 @@
+ #include <algorithm>
+ #include <cstring>
+ #include <cstdio>
+-#include <filesystem>
++#ifdef __APPLE__
++#    include <dirent.h>
++#    include <sys/stat.h>
++#else
++#    include <filesystem>
++#endif
+ #ifdef _WIN32
+ #    include <shlobj.h>
+ #    include <mbstring.h>
+@@ -461,10 +466,40 @@
+ {
+     std::string dataRoot = !popplerDataDir.empty() ? popplerDataDir : std::string { POPPLER_DATADIR };
+
++#ifdef __APPLE__
++    // std::filesystem requires iOS 13; POSIX paths preserve UTF-8 on Apple platforms.
++    for (const char *subDir : { "nameToUnicode", "cidToUnicode", "unicodeMap", "cMap" }) {
++        const std::string dirName = dataRoot + "/" + subDir;
++        std::unique_ptr<DIR, decltype(&closedir)> dir(opendir(dirName.c_str()), closedir);
++        if (!dir) {
++            continue;
++        }
++        while (const auto *entry = readdir(dir.get())) {
++            std::string name = entry->d_name;
++            if (name == "." || name == "..") {
++                continue;
++            }
++            std::string path = dirName + "/" + name;
++            if (strcmp(subDir, "nameToUnicode") == 0) {
++                struct stat st;
++                if (stat(path.c_str(), &st) == 0 && S_ISREG(st.st_mode)) {
++                    parseNameToUnicode(path);
++                }
++            } else if (strcmp(subDir, "cidToUnicode") == 0) {
++                addCIDToUnicode(std::move(name), std::move(path));
++            } else if (strcmp(subDir, "unicodeMap") == 0) {
++                addUnicodeMap(std::move(name), std::move(path));
++            } else {
++                toUnicodeDirs.push_back(path);
++                addCMapDir(std::move(name), std::move(path));
++            }
++        }
++    }
++#else
+     std::error_code ec; // if ec is set, we also get the end iterator, so that's kind of okay.  If not creating with a error code, we get an exception if poppler data is missing
+     for (const auto &entry : std::filesystem::directory_iterator { dataRoot + "/nameToUnicode", ec }) {
+         if (entry.is_regular_file()) {
+-            parseNameToUnicode(entry.path());
++            parseNameToUnicode(entry.path().string());
+         }
+     }
+
+@@ -480,9 +515,10 @@
+         addCMapDir(entry.path().filename().string(), entry.path().string());
+         toUnicodeDirs.push_back(entry.path().string());
+     }
+-}
+-
+-void GlobalParams::parseNameToUnicode(const std::filesystem::path &name)
++#endif
++}
++
++void GlobalParams::parseNameToUnicode(const std::string &name)
+ {
+     char *tok1, *tok2;
+     FILE *f;
+@@ -491,8 +527,8 @@
+     Unicode u;
+     char *tokptr;
+
+-    if (!(f = openFile(name.string().c_str(), "r"))) {
+-        error(errIO, -1, "Couldn't open 'nameToUnicode' file '{0:s}'", name.string().c_str());
++    if (!(f = openFile(name.c_str(), "r"))) {
++        error(errIO, -1, "Couldn't open 'nameToUnicode' file '{0:s}'", name.c_str());
+         return;
+     }
+     line = 1;
+@@ -503,7 +539,7 @@
+             sscanf(tok1, "%x", &u);
+             nameToUnicodeText->add(tok2, u);
+         } else {
+-            error(errConfig, -1, "Bad line in 'nameToUnicode' file ({0:s}:{1:d})", name.string().c_str(), line);
++            error(errConfig, -1, "Bad line in 'nameToUnicode' file ({0:s}:{1:d})", name.c_str(), line);
+         }
+         ++line;
+     }
