@@ -2,3 +2,4 @@ freetype
 iconv
 libjpeg-turbo
 openjpeg
+zlib
